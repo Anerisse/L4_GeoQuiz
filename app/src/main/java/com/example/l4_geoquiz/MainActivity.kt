@@ -1,5 +1,6 @@
 package com.example.l4_geoquiz
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,18 +24,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.l4_geoquiz.data.QuestionRepository
 import com.example.l4_geoquiz.ui.theme.L4_GeoQuizTheme
 
@@ -44,6 +50,23 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             L4_GeoQuizTheme {
+                val configuration = LocalConfiguration.current
+                val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+                // ⚙️ Следим за сменой ориентации и включаем/выключаем immersive mode
+                LaunchedEffect(isLandscape) {
+                    val windowInsetsController =
+                        WindowInsetsControllerCompat(window, window.decorView)
+                    if (isLandscape) {
+                        // 👉 Прячем системные панели
+                        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+                        windowInsetsController.systemBarsBehavior =
+                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    } else {
+                        // 👈 Возвращаем панели в портретном режиме
+                        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+                    }
+                }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     QuizShow(
                         modifier = Modifier.padding(innerPadding)
@@ -57,7 +80,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun QuizShow( modifier: Modifier = Modifier) {
 
-    var quizState by remember { mutableStateOf(QuizState()) }
+    var quizState by rememberSaveable { mutableStateOf(QuizState()) }
     val questions = QuestionRepository.questions
 
 
